@@ -1,5 +1,6 @@
 package com.kasem.receive_sharing_intent
 
+import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -19,8 +20,6 @@ import org.json.JSONObject
 import java.io.File
 import java.io.FileOutputStream
 import java.net.URLConnection
-import android.os.Build
-import android.util.Log
 
 
 class ReceiveSharingIntentPlugin(val registrar: Registrar) :
@@ -121,6 +120,14 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
                 latestText = value
                 eventSinkText?.success(latestText)
             }
+            intent.action == "action_notif" -> { // Notification text
+                val notifId = intent.getIntExtra("extra_notif_id",-1)
+                val value = intent.getStringExtra("extra_notif_url")
+                if (initial) initialText = value
+                latestText = value
+                eventSinkText?.success(latestText)
+                clearNotification(context,notifId)
+            }
             intent.action == Intent.ACTION_VIEW -> { // Opening URL
                 val value = intent.dataString
                 if (initial) initialText = value
@@ -129,7 +136,11 @@ class ReceiveSharingIntentPlugin(val registrar: Registrar) :
             }
         }
     }
-
+    private fun clearNotification(context: Context,id: Int) {
+        val notificationManager = context.getSystemService(
+                Context.NOTIFICATION_SERVICE) as NotificationManager
+        notificationManager.cancel(id)
+    }
     private fun getMediaUris(context: Context, intent: Intent?): JSONArray? {
         if (intent == null) return null
 
